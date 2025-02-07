@@ -191,7 +191,7 @@ export default function Viewer3D() {
       <div
         style={{
           position: 'absolute',
-          top: '20px',
+          top: '60px',
           right: '20px',
           backgroundColor: 'rgba(30, 30, 30, 0.9)',
           padding: '15px',
@@ -203,7 +203,7 @@ export default function Viewer3D() {
           maxHeight: isToolboxCollapsed ? '50px' : 'none',
           overflow: 'hidden',
           transition: 'max-height 0.3s ease-in-out',
-          width: '250px', // Fixed width for consistency
+          width: '300px', // Fixed width for consistency
         }}
       >
         {/* Toggle Button */}
