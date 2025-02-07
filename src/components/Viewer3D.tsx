@@ -10,6 +10,7 @@ export default function Viewer3D() {
   const shapeMaterialRef = useRef<THREE.MeshPhongMaterial | null>(null);
   const [selectedColor, setSelectedColor] = useState(COLORS[0]);
   const [selectedShape, setSelectedShape] = useState('cube');
+  const [isToolboxCollapsed, setIsToolboxCollapsed] = useState(false); // Track toolbox state
   const shapeRef = useRef<THREE.Mesh | null>(null);
   const sceneRef = useRef<THREE.Scene | null>(null);
   const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
@@ -39,7 +40,7 @@ export default function Viewer3D() {
     const scene = new THREE.Scene();
     sceneRef.current = scene;
     scene.background = new THREE.Color(0x1a1a1a);
-    
+
     const camera = new THREE.PerspectiveCamera(
       75,
       window.innerWidth / window.innerHeight,
@@ -47,14 +48,14 @@ export default function Viewer3D() {
       1000
     );
     cameraRef.current = camera;
-    
-    const renderer = new THREE.WebGLRenderer({ 
+
+    const renderer = new THREE.WebGLRenderer({
       antialias: true,
       logarithmicDepthBuffer: true,
-      precision: 'highp'
+      precision: 'highp',
     });
     rendererRef.current = renderer;
-    
+
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
@@ -76,17 +77,20 @@ export default function Viewer3D() {
     // Enhanced axes
     const axesHelper = new THREE.AxesHelper(10);
     const xAxis = axesHelper.geometry.attributes.color;
-    xAxis.setXYZ(0, 1, 0, 0); xAxis.setXYZ(1, 1, 0, 0); 
-    xAxis.setXYZ(2, 0, 1, 0); xAxis.setXYZ(3, 0, 1, 0); 
-    xAxis.setXYZ(4, 0, 0, 1); xAxis.setXYZ(5, 0, 0, 1); 
+    xAxis.setXYZ(0, 1, 0, 0);
+    xAxis.setXYZ(1, 1, 0, 0);
+    xAxis.setXYZ(2, 0, 1, 0);
+    xAxis.setXYZ(3, 0, 1, 0);
+    xAxis.setXYZ(4, 0, 0, 1);
+    xAxis.setXYZ(5, 0, 0, 1);
     scene.add(axesHelper);
-    
+
     // Ground
     const groundGeometry = new THREE.PlaneGeometry(20, 20);
-    const groundMaterial = new THREE.MeshPhongMaterial({ 
+    const groundMaterial = new THREE.MeshPhongMaterial({
       color: 0x222222,
       shininess: 30,
-      specular: new THREE.Color(0x111111)
+      specular: new THREE.Color(0x111111),
     });
     const ground = new THREE.Mesh(groundGeometry, groundMaterial);
     ground.rotation.x = -Math.PI / 2;
@@ -96,10 +100,10 @@ export default function Viewer3D() {
 
     // Main shape
     const geometry = createGeometry(selectedShape);
-    const material = new THREE.MeshPhongMaterial({ 
+    const material = new THREE.MeshPhongMaterial({
       color: selectedColor,
       shininess: 100,
-      specular: new THREE.Color(0x444444)
+      specular: new THREE.Color(0x444444),
     });
     shapeMaterialRef.current = material;
     const shape = new THREE.Mesh(geometry, material);
@@ -111,11 +115,9 @@ export default function Viewer3D() {
     // Lighting
     const ambientLight = new THREE.AmbientLight(0x404040, 0.5);
     scene.add(ambientLight);
-
     const hemisphereLight = new THREE.HemisphereLight(0xffffff, 0x444444, 0.8);
     hemisphereLight.position.set(0, 20, 0);
     scene.add(hemisphereLight);
-
     const directionalLight = new THREE.DirectionalLight(0xffffff, 1.2);
     directionalLight.position.set(5, 5, 5);
     directionalLight.castShadow = true;
@@ -134,7 +136,7 @@ export default function Viewer3D() {
 
     function handleResize() {
       if (!cameraRef.current || !rendererRef.current) return;
-      
+
       const width = window.innerWidth;
       const height = window.innerHeight;
       cameraRef.current.aspect = width / height;
@@ -159,7 +161,12 @@ export default function Viewer3D() {
   }, [selectedShape]);
 
   useEffect(() => {
-    if (shapeMaterialRef.current && rendererRef.current && sceneRef.current && cameraRef.current) {
+    if (
+      shapeMaterialRef.current &&
+      rendererRef.current &&
+      sceneRef.current &&
+      cameraRef.current
+    ) {
       shapeMaterialRef.current.color.set(selectedColor);
       rendererRef.current.render(sceneRef.current, cameraRef.current);
     }
@@ -168,80 +175,109 @@ export default function Viewer3D() {
   return (
     <div style={{ position: 'relative', width: '100vw', height: '100vh' }}>
       <div ref={containerRef} style={{ width: '100%', height: '100%' }} />
-      
+
       <div className="title font-sans font-700" style={{
         position: 'absolute',
         top: '20px',
         left: '20px',
         color: 'white',
         fontSize: '24px',
-        textShadow: '2px 2px 4px rgba(0,0,0,0.5)'
+        textShadow: '2px 2px 4px rgba(0,0,0,0.5)',
       }}>
         ParthCAD
       </div>
 
-      <div style={{
-        position: 'absolute',
-        top: '20px',
-        right: '20px',
-        backgroundColor: 'rgba(30, 30, 30, 0.9)',
-        padding: '15px',
-        borderRadius: '12px',
-        display: 'flex',
-        flexDirection: 'column',
-        gap: '15px',
-        boxShadow: '0 4px 6px rgba(0,0,0,0.3)'
-      }}>
-        <div style={{
-          display: 'flex',
-          gap: '8px',
-          flexWrap: 'wrap',
-          justifyContent: 'center'
-        }}>
-          {COLORS.map((color) => (
-            <div
-              key={color}
-              onClick={() => setSelectedColor(color)}
-              style={{
-                width: '36px',
-                height: '36px',
-                borderRadius: '50%',
-                backgroundColor: color,
-                cursor: 'pointer',
-                border: color === selectedColor ? '3px solid white' : '2px solid rgba(255,255,255,0.2)',
-                boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
-                transition: 'transform 0.2s',
-                transform: color === selectedColor ? 'scale(1.1)' : 'scale(1)'
-              }}
-            />
-          ))}
-        </div>
-        
-        <div style={{
+      {/* Toolbox */}
+      <div
+        style={{
+          position: 'absolute',
+          top: '20px',
+          right: '20px',
+          backgroundColor: 'rgba(30, 30, 30, 0.9)',
+          padding: '15px',
+          borderRadius: '12px',
           display: 'flex',
           flexDirection: 'column',
-          gap: '8px'
-        }}>
-          {SHAPES.map((shape) => (
-            <button
-              key={shape}
-              onClick={() => setSelectedShape(shape)}
-              style={{
-                padding: '10px 15px',
-                backgroundColor: shape === selectedShape ? '#666' : '#444',
-                border: 'none',
-                borderRadius: '6px',
-                color: 'white',
-                cursor: 'pointer',
-                textTransform: 'capitalize',
-                fontWeight: shape === selectedShape ? 'bold' : 'normal',
-                transition: 'all 0.2s'
-              }}
-            >
-              {shape}
-            </button>
-          ))}
-        </div>
+          gap: '15px',
+          boxShadow: '0 4px 6px rgba(0,0,0,0.3)',
+          maxHeight: isToolboxCollapsed ? '50px' : 'none',
+          overflow: 'hidden',
+          transition: 'max-height 0.3s ease-in-out',
+          width: '250px', // Fixed width for consistency
+        }}
+      >
+        {/* Toggle Button */}
+        <button
+          onClick={() => setIsToolboxCollapsed(!isToolboxCollapsed)}
+          style={{
+            padding: '10px',
+            backgroundColor: '#444',
+            border: 'none',
+            borderRadius: '6px',
+            color: 'white',
+            cursor: 'pointer',
+            fontWeight: 'bold',
+            alignSelf: 'center',
+            marginBottom: '10px',
+          }}
+        >
+          {isToolboxCollapsed ? 'Expand' : 'Collapse'}
+        </button>
+
+        {/* Colors Section */}
+        {!isToolboxCollapsed && (
+          <div
+            style={{
+              display: 'flex',
+              gap: '8px',
+              flexWrap: 'wrap',
+              justifyContent: 'center',
+            }}
+          >
+            {COLORS.map((color) => (
+              <div
+                key={color}
+                onClick={() => setSelectedColor(color)}
+                style={{
+                  width: '36px',
+                  height: '36px',
+                  borderRadius: '50%',
+                  backgroundColor: color,
+                  cursor: 'pointer',
+                  border: color === selectedColor ? '3px solid white' : '2px solid rgba(255,255,255,0.2)',
+                  boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
+                  transition: 'transform 0.2s',
+                  transform: color === selectedColor ? 'scale(1.1)' : 'scale(1)',
+                }}
+              />
+            ))}
+          </div>
+        )}
+
+        {/* Shapes Section */}
+        {!isToolboxCollapsed && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            {SHAPES.map((shape) => (
+              <button
+                key={shape}
+                onClick={() => setSelectedShape(shape)}
+                style={{
+                  padding: '10px 15px',
+                  backgroundColor: shape === selectedShape ? '#666' : '#444',
+                  border: 'none',
+                  borderRadius: '6px',
+                  color: 'white',
+                  cursor: 'pointer',
+                  textTransform: 'capitalize',
+                  fontWeight: shape === selectedShape ? 'bold' : 'normal',
+                  transition: 'all 0.2s',
+                }}
+              >
+                {shape}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
